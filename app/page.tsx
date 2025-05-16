@@ -17,6 +17,13 @@ export default function Home() {
       path: "/timeline",
       icon: "⏱️",
     },
+    {
+      id: 3,
+      title: "오늘의 명언 & 팁",
+      description: "매일 새로운 영감과 유용한 정보를 제공합니다.",
+      path: "/quotes",
+      icon: "💡",
+    },
   ]
 
   return (
