@@ -24,6 +24,13 @@ export default function Home() {
       path: "/quotes",
       icon: "💡",
     },
+    {
+      id: 4,
+      title: "프론트엔드 용어 사전",
+      description: "프론트엔드 개발 관련 용어를 쉽게 찾아볼 수 있습니다.",
+      path: "/glossary",
+      icon: "📚",
+    },
   ]
 
   return (
