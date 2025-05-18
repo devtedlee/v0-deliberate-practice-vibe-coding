@@ -31,6 +31,13 @@ export default function Home() {
       path: "/glossary",
       icon: "📚",
     },
+    {
+      id: 5,
+      title: "기본 단위 변환기",
+      description: "길이, 무게, 온도 단위를 쉽고 빠르게 변환할 수 있습니다.",
+      path: "/converter",
+      icon: "🔄",
+    },
   ]
 
   return (
