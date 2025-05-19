@@ -38,6 +38,13 @@ export default function Home() {
       path: "/converter",
       icon: "🔄",
     },
+    {
+      id: 6,
+      title: "npm 패키지 통계",
+      description: "인기 있는 npm 패키지들의 사용 통계를 시각화합니다.",
+      path: "/npm-stats",
+      icon: "📊",
+    },
   ]
 
   return (
