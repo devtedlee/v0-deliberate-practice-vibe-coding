@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Map, InfoWindow, AdvancedMarker } from "@vis.gl/react-google-maps"
+import { Map, InfoWindow, AdvancedMarker, useMap } from "@vis.gl/react-google-maps"
 import RestaurantMarker from "./RestaurantMarker"
 import RestaurantInfoWindow from "./RestaurantInfoWindow"
 import CurrentLocationButton from "./CurrentLocationButton"
@@ -19,6 +19,31 @@ interface MapSectionProps {
   onMapZoomChange: (zoom: number) => void
 }
 
+// 지도 컨트롤러 컴포넌트 - 지도 인스턴스에 직접 접근하여 설정
+function MapController({ onMapReady }: { onMapReady: (map: google.maps.Map) => void }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (map) {
+      // 지도 옵션 직접 설정
+      map.setOptions({
+        draggable: true,
+        clickableIcons: false,
+        disableDoubleClickZoom: false,
+        fullscreenControl: false,
+        gestureHandling: "greedy",
+        keyboardShortcuts: true,
+        scrollwheel: true,
+      })
+
+      // 부모 컴포넌트에 지도 인스턴스 전달
+      onMapReady(map)
+    }
+  }, [map, onMapReady])
+
+  return null
+}
+
 export default function MapSection({
   restaurants,
   selectedRestaurant,
@@ -34,6 +59,7 @@ export default function MapSection({
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   const mapRef = useRef<google.maps.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // 컴포넌트 마운트 시 콘솔에 정보 출력
   useEffect(() => {
@@ -51,14 +77,20 @@ export default function MapSection({
     }
   }, [selectedRestaurant, onMapCenterChange, onMapZoomChange])
 
-  // 지도 로드 완료 시 호출
-  const handleMapLoad = (map: google.maps.Map) => {
-    console.log("Google Maps 로드 성공")
+  // 지도 인스턴스 준비 완료 시 호출
+  const handleMapReady = (map: google.maps.Map) => {
+    console.log("Google Maps 인스턴스 준비 완료")
     mapRef.current = map
-    setIsMapLoaded(true)
 
     // 지도 이벤트 리스너 추가
+    map.addListener("dragstart", () => {
+      console.log("지도 드래그 시작")
+      setIsDragging(true)
+    })
+
     map.addListener("dragend", () => {
+      console.log("지도 드래그 종료")
+      setIsDragging(false)
       const center = map.getCenter()
       if (center) {
         onMapCenterChange({ lat: center.lat(), lng: center.lng() })
@@ -68,6 +100,12 @@ export default function MapSection({
     map.addListener("zoom_changed", () => {
       onMapZoomChange(map.getZoom() || mapZoom)
     })
+  }
+
+  // 지도 로드 완료 시 호출
+  const handleMapLoad = () => {
+    console.log("Google Maps 로드 성공")
+    setIsMapLoaded(true)
   }
 
   // 지도 로드 실패 시 호출
@@ -96,7 +134,14 @@ export default function MapSection({
   }
 
   return (
-    <div ref={mapContainerRef} className="w-full h-full relative bg-gray-100">
+    <div
+      ref={mapContainerRef}
+      className="w-full h-full relative bg-gray-100"
+      style={{
+        touchAction: "none",
+        cursor: isDragging ? "grabbing" : "grab",
+      }}
+    >
       <CurrentLocationButton onLocationFound={handleLocationFound} />
 
       <Map
@@ -107,13 +152,16 @@ export default function MapSection({
         zoom={mapZoom}
         onLoad={handleMapLoad}
         onError={handleMapError}
-        gestureHandling="cooperative"
+        gestureHandling="greedy"
         disableDefaultUI={false}
         mapTypeControl={false}
         className="w-full h-full"
         style={{ width: "100%", height: "100%" }}
         clickableIcons={false}
+        draggable={true}
       >
+        <MapController onMapReady={handleMapReady} />
+
         {restaurants.map((restaurant) => (
           <RestaurantMarker
             key={restaurant.id}

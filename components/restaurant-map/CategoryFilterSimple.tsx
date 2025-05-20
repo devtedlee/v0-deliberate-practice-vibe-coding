@@ -30,7 +30,10 @@ export default function CategoryFilterSimple({ selectedCategories, onCategoryCha
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm">
+    <div
+      className="bg-white p-4 rounded-lg shadow-sm"
+      style={{ pointerEvents: "auto" }} // 명시적으로 포인터 이벤트 활성화
+    >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-medium">카테고리 필터</h3>
         <button onClick={toggleAll} className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
@@ -41,7 +44,10 @@ export default function CategoryFilterSimple({ selectedCategories, onCategoryCha
         {allCategories.map((category) => (
           <button
             key={category}
-            onClick={() => toggleCategory(category)}
+            onClick={(e) => {
+              e.stopPropagation() // 이벤트 버블링 방지
+              toggleCategory(category)
+            }}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors flex items-center ${
               selectedCategories.includes(category)
                 ? `${getCategoryColor(category)} text-white`

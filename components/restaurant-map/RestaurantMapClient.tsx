@@ -375,8 +375,18 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
         </div>
       ) : (
         <div className="w-full h-full flex flex-col" ref={mapContainerRef}>
-          <div className={`relative ${showMapList ? "h-1/2" : "h-full"}`} style={{ minHeight: "400px" }}>
-            <div className="absolute top-4 left-4 z-10 w-full max-w-xs">
+          <div
+            className={`relative ${showMapList ? "h-1/2" : "h-full"}`}
+            style={{
+              minHeight: "400px",
+              position: "relative",
+              zIndex: 1, // 명시적으로 z-index 설정
+            }}
+          >
+            <div
+              className="absolute top-4 left-4 z-10 w-full max-w-xs"
+              style={{ pointerEvents: "none" }} // 필터 컨테이너는 포인터 이벤트를 무시하도록 설정
+            >
               <CategoryFilterSimple selectedCategories={selectedCategories} onCategoryChange={setSelectedCategories} />
             </div>
 
