@@ -31,7 +31,7 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
   // 필터링된 맛집 목록
   const filteredRestaurants = restaurants.filter((restaurant) => selectedCategories.includes(restaurant.category))
 
-  // 컴포넌트 마운트 시 설정
+  // 컴포넌트 마운트 시 설정 - 클라이언트 사이드에서만 실행
   useEffect(() => {
     // 현재 URL 저장
     const fullUrl = window.location.href
@@ -78,8 +78,12 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     console.log("현재 URL:", fullUrl)
   }, [apiKey, isPreviewMode])
 
-  // API 키 제한 설정에 추가할 패턴 생성
+  // API 키 제한 설정에 추가할 패턴 생성 - 클라이언트 사이드에서만 실행되는 함수
   const getSuggestedPatterns = () => {
+    if (typeof window === "undefined") {
+      return { exactPattern: "", wildcardPattern: "" }
+    }
+
     const hostname = window.location.hostname
     const exactPattern = `https://${hostname}/*`
     const wildcardPattern = hostname.includes("vusercontent.net")
@@ -133,14 +137,16 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     const newDebugMode = !isDebugMode
     setIsDebugMode(newDebugMode)
 
-    // URL 파라미터 업데이트
-    const url = new URL(window.location.href)
-    if (newDebugMode) {
-      url.searchParams.set("debug", "true")
-    } else {
-      url.searchParams.delete("debug")
+    // URL 파라미터 업데이트 - 클라이언트 사이드에서만 실행
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href)
+      if (newDebugMode) {
+        url.searchParams.set("debug", "true")
+      } else {
+        url.searchParams.delete("debug")
+      }
+      window.history.pushState({}, "", url.toString())
     }
-    window.history.pushState({}, "", url.toString())
   }
 
   // 보기 모드 토글
@@ -148,38 +154,44 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     const newShowMapList = !showMapList
     setShowMapList(newShowMapList)
 
-    // URL 파라미터 업데이트
-    const url = new URL(window.location.href)
-    if (newShowMapList) {
-      url.searchParams.set("view", "both")
-    } else {
-      url.searchParams.set("view", "map")
+    // URL 파라미터 업데이트 - 클라이언트 사이드에서만 실행
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href)
+      if (newShowMapList) {
+        url.searchParams.set("view", "both")
+      } else {
+        url.searchParams.set("view", "map")
+      }
+      window.history.pushState({}, "", url.toString())
     }
-    window.history.pushState({}, "", url.toString())
   }
 
   // 지도/목록 모드 토글
   const toggleMapMode = () => {
     // v0 preview 환경에서는 지도 모드로 전환 불가
     if (isV0Preview && !isPreviewMode) {
-      alert("v0 preview 환경에서는 지도 모드를 사용할 수 없습니다. API 키 제한 때문입니다.")
+      if (typeof window !== "undefined") {
+        alert("v0 preview 환경에서는 지도 모드를 사용할 수 없습니다. API 키 제한 때문입니다.")
+      }
       return
     }
 
     const newIsPreviewMode = !isPreviewMode
     setIsPreviewMode(newIsPreviewMode)
 
-    // URL 파라미터 업데이트
-    const url = new URL(window.location.href)
-    if (newIsPreviewMode) {
-      url.searchParams.set("mode", "preview")
-    } else {
-      url.searchParams.set("mode", "map")
+    // URL 파라미터 업데이트 - 클라이언트 사이드에서만 실행
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href)
+      if (newIsPreviewMode) {
+        url.searchParams.set("mode", "preview")
+      } else {
+        url.searchParams.set("mode", "map")
+      }
+      window.history.pushState({}, "", url.toString())
     }
-    window.history.pushState({}, "", url.toString())
   }
 
-  // 패턴 제안
+  // 패턴 제안 - 클라이언트 사이드에서만 실행
   const { exactPattern, wildcardPattern } = getSuggestedPatterns()
 
   // v0 preview 환경 경고 메시지
@@ -215,8 +227,10 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
                 <code className="bg-yellow-100 px-2 py-1 rounded text-xs">{exactPattern}</code>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(exactPattern)
-                    alert("패턴이 클립보드에 복사되었습니다!")
+                    if (typeof navigator !== "undefined" && navigator.clipboard) {
+                      navigator.clipboard.writeText(exactPattern)
+                      alert("패턴이 클립보드에 복사되었습니다!")
+                    }
                   }}
                   className="ml-2 text-xs text-blue-600 hover:text-blue-800"
                 >
@@ -228,8 +242,10 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
                 <code className="bg-yellow-100 px-2 py-1 rounded text-xs">{wildcardPattern}</code>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(wildcardPattern)
-                    alert("패턴이 클립보드에 복사되었습니다!")
+                    if (typeof navigator !== "undefined" && navigator.clipboard) {
+                      navigator.clipboard.writeText(wildcardPattern)
+                      alert("패턴이 클립보드에 복사되었습니다!")
+                    }
                   }}
                   className="ml-2 text-xs text-blue-600 hover:text-blue-800"
                 >

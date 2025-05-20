@@ -1,8 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { restaurantsData } from "@/data/restaurants"
-import RestaurantMapClient from "@/components/restaurant-map/RestaurantMapClient"
-import { Suspense } from "react"
+import RestaurantMapClientWrapper from "./client"
 
 // 서버 컴포넌트
 export default function RestaurantMapPage() {
@@ -29,21 +27,11 @@ export default function RestaurantMapPage() {
       </header>
 
       <main className="flex-1 relative" style={{ minHeight: "600px" }}>
-        <Suspense fallback={<LoadingUI />}>
-          <RestaurantMapClient restaurants={restaurantsData} apiKey={apiKey} />
-        </Suspense>
+        <RestaurantMapClientWrapper apiKey={apiKey} />
       </main>
     </div>
   )
 }
 
-function LoadingUI() {
-  return (
-    <div className="w-full h-full flex items-center justify-center p-8">
-      <div className="text-center">
-        <div className="inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-        <p className="text-gray-600">로딩 중...</p>
-      </div>
-    </div>
-  )
-}
+// 정적 생성 비활성화 - 동적 렌더링 사용
+export const dynamic = "force-dynamic"
