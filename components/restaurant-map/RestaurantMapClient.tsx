@@ -26,6 +26,7 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
   const [currentUrl, setCurrentUrl] = useState<string>("")
   const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.978 }) // 서울 시청 좌표
   const [mapZoom, setMapZoom] = useState(13)
+  const [isUserControllingMap, setIsUserControllingMap] = useState(false) // 사용자가 지도를 조작 중인지 여부
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
   // 필터링된 맛집 목록
@@ -106,6 +107,9 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
       setIsPreviewMode(false)
     }
 
+    // 사용자 지도 조작 상태 비활성화 (프로그래밍 방식 이동)
+    setIsUserControllingMap(false)
+
     // 지도 중심점 및 줌 레벨 변경
     setMapCenter({ lat: restaurant.lat, lng: restaurant.lng })
     setMapZoom(16)
@@ -124,12 +128,24 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
 
   // 지도 중심점 변경 처리
   const handleMapCenterChange = (center: { lat: number; lng: number }) => {
-    setMapCenter(center)
+    // 사용자가 지도를 조작 중이 아닐 때만 중심점 업데이트
+    if (!isUserControllingMap) {
+      setMapCenter(center)
+    }
   }
 
   // 지도 줌 레벨 변경 처리
   const handleMapZoomChange = (zoom: number) => {
-    setMapZoom(zoom)
+    // 사용자가 지도를 조작 중이 아닐 때만 줌 레벨 업데이트
+    if (!isUserControllingMap) {
+      setMapZoom(zoom)
+    }
+  }
+
+  // 사용자 지도 조작 상태 변경 처리
+  const handleUserMapControlChange = (isControlling: boolean) => {
+    console.log(`사용자 지도 조작 상태 변경: ${isControlling ? "조작 중" : "조작 종료"}`)
+    setIsUserControllingMap(isControlling)
   }
 
   // 디버그 모드 토글
@@ -322,6 +338,12 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
               <span className="font-medium">지도 줌 레벨:</span> {mapZoom}
             </p>
             <p>
+              <span className="font-medium">사용자 지도 조작:</span>{" "}
+              <span className={isUserControllingMap ? "text-green-600 font-bold" : "text-gray-600"}>
+                {isUserControllingMap ? "활성" : "비활성"}
+              </span>
+            </p>
+            <p>
               <span className="font-medium">컨테이너 크기:</span>{" "}
               {mapContainerRef.current
                 ? `${mapContainerRef.current.offsetWidth}x${mapContainerRef.current.offsetHeight}`
@@ -400,6 +422,8 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
                 mapZoom={mapZoom}
                 onMapCenterChange={handleMapCenterChange}
                 onMapZoomChange={handleMapZoomChange}
+                onUserMapControlChange={handleUserMapControlChange}
+                userControllingMap={isUserControllingMap}
               />
             </APIProvider>
           </div>
