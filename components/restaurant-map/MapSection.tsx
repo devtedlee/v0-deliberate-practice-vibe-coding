@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Map, InfoWindow, AdvancedMarker } from "@vis.gl/react-google-maps"
 import RestaurantMarker from "./RestaurantMarker"
 import RestaurantInfoWindow from "./RestaurantInfoWindow"
@@ -24,24 +24,33 @@ export default function MapSection({
   const [mapZoom, setMapZoom] = useState(13)
   const [showCurrentLocation, setShowCurrentLocation] = useState(false)
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [isMapLoaded, setIsMapLoaded] = useState(false)
+  const mapContainerRef = useRef<HTMLDivElement>(null)
+
+  // 컴포넌트 마운트 시 콘솔에 정보 출력
+  useEffect(() => {
+    console.log("MapSection 컴포넌트 마운트됨")
+    console.log("맵 컨테이너 크기:", mapContainerRef.current?.offsetWidth, "x", mapContainerRef.current?.offsetHeight)
+
+    // 맵 컨테이너 크기가 0이면 경고
+    if (
+      mapContainerRef.current &&
+      (mapContainerRef.current.offsetWidth === 0 || mapContainerRef.current.offsetHeight === 0)
+    ) {
+      console.warn("맵 컨테이너의 크기가 0입니다. 지도가 보이지 않을 수 있습니다.")
+    }
+  }, [])
+
+  // 지도 로드 완료 시 호출
+  const handleMapLoad = () => {
+    console.log("Google Maps 로드 성공")
+    setIsMapLoaded(true)
+  }
 
   // 지도 로드 실패 시 호출
   const handleMapError = (error: Error) => {
     console.error("Google Maps 로드 실패:", error)
-
-    let errorMessage = "Google Maps를 로드하는 중 오류가 발생했습니다."
-
-    // 오류 메시지에 따라 다른 안내 제공
-    if (error.message.includes("ApiNotActivatedMapError")) {
-      errorMessage =
-        "Google Maps JavaScript API가 활성화되지 않았습니다. Google Cloud Console에서 API를 활성화해주세요."
-    } else if (error.message.includes("InvalidKeyMapError")) {
-      errorMessage = "Google Maps API 키가 유효하지 않습니다. 올바른 API 키를 설정해주세요."
-    } else if (error.message.includes("RefererNotAllowedMapError")) {
-      errorMessage = "현재 도메인에서 Google Maps API 사용이 허용되지 않았습니다. API 키 제한 설정을 확인해주세요."
-    }
-
-    onError(errorMessage)
+    onError(`지도 로드 실패: ${error.message}`)
   }
 
   // 마커 클릭 시 해당 맛집 선택
@@ -65,8 +74,13 @@ export default function MapSection({
   }
 
   return (
-    <div className="w-full h-full">
+    <div ref={mapContainerRef} className="w-full h-full relative bg-gray-100 border border-gray-300">
       <CurrentLocationButton onLocationFound={handleLocationFound} />
+
+      {/* 지도 컨테이너 크기 표시 (디버깅용) */}
+      <div className="absolute bottom-4 left-4 z-10 bg-white px-2 py-1 text-xs rounded shadow">
+        컨테이너: {mapContainerRef.current?.offsetWidth || 0} x {mapContainerRef.current?.offsetHeight || 0}
+      </div>
 
       <Map
         mapId="restaurant-map"
@@ -74,11 +88,13 @@ export default function MapSection({
         defaultZoom={mapZoom}
         center={mapCenter}
         zoom={mapZoom}
+        onLoad={handleMapLoad}
         onError={handleMapError}
         gestureHandling="greedy"
         disableDefaultUI={false}
         mapTypeControl={false}
         className="w-full h-full"
+        style={{ width: "100%", height: "100%" }}
       >
         {restaurants.map((restaurant) => (
           <RestaurantMarker
