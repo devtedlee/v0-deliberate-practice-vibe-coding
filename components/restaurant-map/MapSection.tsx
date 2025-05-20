@@ -24,12 +24,15 @@ interface MapSectionProps {
 // 지도 컨트롤러 컴포넌트 - 지도 인스턴스에 직접 접근하여 설정
 function MapController({
   onMapReady,
+  selectedRestaurant,
   onUserMapControlChange,
 }: {
   onMapReady: (map: google.maps.Map) => void
+  selectedRestaurant: Restaurant | null
   onUserMapControlChange: (isControlling: boolean) => void
 }) {
   const map = useMap()
+  const previousRestaurantRef = useRef<Restaurant | null>(null)
 
   useEffect(() => {
     if (map) {
@@ -98,6 +101,26 @@ function MapController({
     }
   }, [map, onMapReady, onUserMapControlChange])
 
+  // 선택된 레스토랑이 변경될 때 지도 이동
+  useEffect(() => {
+    if (map && selectedRestaurant && selectedRestaurant !== previousRestaurantRef.current) {
+      console.log("선택된 레스토랑으로 지도 이동:", selectedRestaurant.name)
+
+      // 지도를 선택된 레스토랑 위치로 부드럽게 이동
+      map.panTo({ lat: selectedRestaurant.lat, lng: selectedRestaurant.lng })
+      map.setZoom(16)
+
+      // 이동 애니메이션이 완료되면 즉시 사용자 조작 상태로 전환
+      // 약 300ms 후에 사용자 조작 상태로 전환 (애니메이션 시간 고려)
+      setTimeout(() => {
+        console.log("지도 이동 완료, 사용자 조작 상태로 전환")
+        onUserMapControlChange(true)
+      }, 300)
+
+      previousRestaurantRef.current = selectedRestaurant
+    }
+  }, [map, selectedRestaurant, onUserMapControlChange])
+
   return null
 }
 
@@ -120,42 +143,11 @@ export default function MapSection({
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
 
-  // 내부 프로그래매틱 지도 이동을 위한 상태
-  const [internalMapCenter, setInternalMapCenter] = useState(mapCenter)
-  const [internalMapZoom, setInternalMapZoom] = useState(mapZoom)
-
   // 컴포넌트 마운트 시 콘솔에 정보 출력
   useEffect(() => {
     console.log("MapSection 컴포넌트 마운트됨")
     console.log("맵 컨테이너 크기:", mapContainerRef.current?.offsetWidth, "x", mapContainerRef.current?.offsetHeight)
   }, [])
-
-  // 외부 props 변경 시 내부 상태 업데이트 (사용자 조작 중이 아닐 때만)
-  useEffect(() => {
-    if (!userControllingMap) {
-      setInternalMapCenter(mapCenter)
-      setInternalMapZoom(mapZoom)
-    }
-  }, [mapCenter, mapZoom, userControllingMap])
-
-  // 선택된 레스토랑이 변경될 때 지도 중심 이동
-  useEffect(() => {
-    if (selectedRestaurant && mapRef.current) {
-      console.log("선택된 레스토랑으로 지도 이동:", selectedRestaurant.name)
-
-      // 사용자 조작 상태 비활성화 (프로그래밍 방식 이동)
-      onUserMapControlChange(false)
-
-      // 내부 상태 업데이트
-      const newCenter = { lat: selectedRestaurant.lat, lng: selectedRestaurant.lng }
-      setInternalMapCenter(newCenter)
-      setInternalMapZoom(16)
-
-      // 부모 컴포넌트 상태 업데이트
-      onMapCenterChange(newCenter)
-      onMapZoomChange(16)
-    }
-  }, [selectedRestaurant, onMapCenterChange, onMapZoomChange, onUserMapControlChange])
 
   // 지도 인스턴스 준비 완료 시 호출
   const handleMapReady = (map: google.maps.Map) => {
@@ -173,29 +165,23 @@ export default function MapSection({
       setIsDragging(false)
       const center = map.getCenter()
       if (center) {
-        // 내부 상태 업데이트
-        const newCenter = { lat: center.lat(), lng: center.lng() }
-        setInternalMapCenter(newCenter)
-
         // 부모에게 변경 알림
-        onMapCenterChange(newCenter)
+        onMapCenterChange({ lat: center.lat(), lng: center.lng() })
       }
     })
 
     map.addListener("zoom_changed", () => {
-      const newZoom = map.getZoom() || internalMapZoom
-      setInternalMapZoom(newZoom)
+      const newZoom = map.getZoom() || mapZoom
       onMapZoomChange(newZoom)
     })
 
     // 센터 변경 이벤트 추가
     map.addListener("center_changed", () => {
-      if (userControllingMap) {
-        const center = map.getCenter()
-        if (center) {
-          // 내부 상태만 업데이트, 부모 상태는 dragend에서 업데이트
-          setInternalMapCenter({ lat: center.lat(), lng: center.lng() })
-        }
+      const center = map.getCenter()
+      if (center) {
+        // 내부적으로만 추적, 드래그 종료 시에만 부모에게 알림
+        const newCenter = { lat: center.lat(), lng: center.lng() }
+        console.log("지도 중심 변경:", newCenter)
       }
     })
   }
@@ -226,19 +212,23 @@ export default function MapSection({
   // 현재 위치 찾기
   const handleLocationFound = (position: { lat: number; lng: number }) => {
     setCurrentLocation(position)
+    setShowCurrentLocation(true)
 
-    // 사용자 조작 상태 비활성화 (프로그래밍 방식 이동)
-    onUserMapControlChange(false)
+    // 지도 인스턴스가 있으면 직접 이동
+    if (mapRef.current) {
+      mapRef.current.panTo(position)
+      mapRef.current.setZoom(15)
 
-    // 내부 상태 업데이트
-    setInternalMapCenter(position)
-    setInternalMapZoom(15)
+      // 이동 애니메이션이 완료되면 즉시 사용자 조작 상태로 전환
+      setTimeout(() => {
+        console.log("현재 위치로 이동 완료, 사용자 조작 상태로 전환")
+        onUserMapControlChange(true)
+      }, 300)
+    }
 
-    // 부모 컴포넌트 상태 업데이트
+    // 부모 컴포넌트 상태 업데이트 (기록용)
     onMapCenterChange(position)
     onMapZoomChange(15)
-
-    setShowCurrentLocation(true)
   }
 
   return (
@@ -256,8 +246,6 @@ export default function MapSection({
         mapId="restaurant-map"
         defaultCenter={mapCenter}
         defaultZoom={mapZoom}
-        center={userControllingMap ? undefined : internalMapCenter} // 사용자 조작 중이면 center prop을 사용하지 않음
-        zoom={userControllingMap ? undefined : internalMapZoom} // 사용자 조작 중이면 zoom prop을 사용하지 않음
         onLoad={handleMapLoad}
         onError={handleMapError}
         gestureHandling="greedy"
@@ -268,7 +256,11 @@ export default function MapSection({
         clickableIcons={false}
         draggable={true}
       >
-        <MapController onMapReady={handleMapReady} onUserMapControlChange={onUserMapControlChange} />
+        <MapController
+          onMapReady={handleMapReady}
+          selectedRestaurant={selectedRestaurant}
+          onUserMapControlChange={onUserMapControlChange}
+        />
 
         {restaurants.map((restaurant) => (
           <RestaurantMarker

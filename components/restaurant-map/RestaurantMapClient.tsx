@@ -26,7 +26,7 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
   const [currentUrl, setCurrentUrl] = useState<string>("")
   const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.978 }) // 서울 시청 좌표
   const [mapZoom, setMapZoom] = useState(13)
-  const [isUserControllingMap, setIsUserControllingMap] = useState(false) // 사용자가 지도를 조작 중인지 여부
+  const [isUserControllingMap, setIsUserControllingMap] = useState(true) // 기본값을 true로 변경
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
   // 필터링된 맛집 목록
@@ -110,7 +110,7 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     // 사용자 지도 조작 상태 비활성화 (프로그래밍 방식 이동)
     setIsUserControllingMap(false)
 
-    // 지도 중심점 및 줌 레벨 변경
+    // 지도 중심점 및 줌 레벨 변경 (기록용)
     setMapCenter({ lat: restaurant.lat, lng: restaurant.lng })
     setMapZoom(16)
   }
@@ -126,20 +126,14 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     }
   }
 
-  // 지도 중심점 변경 처리
+  // 지도 중심점 변경 처리 (기록용)
   const handleMapCenterChange = (center: { lat: number; lng: number }) => {
-    // 사용자가 지도를 조작 중이 아닐 때만 중심점 업데이트
-    if (!isUserControllingMap) {
-      setMapCenter(center)
-    }
+    setMapCenter(center)
   }
 
-  // 지도 줌 레벨 변경 처리
+  // 지도 줌 레벨 변경 처리 (기록용)
   const handleMapZoomChange = (zoom: number) => {
-    // 사용자가 지도를 조작 중이 아닐 때만 줌 레벨 업데이트
-    if (!isUserControllingMap) {
-      setMapZoom(zoom)
-    }
+    setMapZoom(zoom)
   }
 
   // 사용자 지도 조작 상태 변경 처리
