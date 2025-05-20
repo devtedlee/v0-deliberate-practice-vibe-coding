@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { ExternalLink } from "lucide-react"
 import type { Restaurant } from "@/types/restaurant"
 
@@ -10,6 +11,17 @@ interface RestaurantListProps {
 }
 
 export default function RestaurantList({ restaurants, onSelectRestaurant, selectedRestaurantId }: RestaurantListProps) {
+  // 선택된 맛집 요소에 대한 참조
+  const selectedItemRef = useRef<HTMLDivElement>(null)
+
+  // 선택된 맛집이 변경되면 해당 요소로 스크롤
+  useEffect(() => {
+    if (selectedRestaurantId && selectedItemRef.current) {
+      // 부드러운 스크롤로 선택된 맛집으로 이동
+      selectedItemRef.current.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [selectedRestaurantId])
+
   // 카테고리별 맛집 그룹화
   const groupedByCategory = restaurants.reduce(
     (acc, restaurant) => {
@@ -54,10 +66,11 @@ export default function RestaurantList({ restaurants, onSelectRestaurant, select
             {categoryRestaurants.map((restaurant) => (
               <div
                 key={restaurant.id}
-                className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedRestaurantId === restaurant.id
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
+                ref={restaurant.id === selectedRestaurantId ? selectedItemRef : null}
+                className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  restaurant.id === selectedRestaurantId
+                    ? "border-blue-500 bg-blue-50 shadow-md transform scale-102"
+                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
                 }`}
                 onClick={() => onSelectRestaurant(restaurant)}
               >

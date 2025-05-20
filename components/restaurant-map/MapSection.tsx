@@ -6,12 +6,17 @@ import RestaurantMarker from "./RestaurantMarker"
 import RestaurantInfoWindow from "./RestaurantInfoWindow"
 import CurrentLocationButton from "./CurrentLocationButton"
 import type { Restaurant } from "@/types/restaurant"
+import type { google } from "googlemaps"
 
 interface MapSectionProps {
   restaurants: Restaurant[]
   selectedRestaurant: Restaurant | null
   setSelectedRestaurant: (restaurant: Restaurant | null) => void
   onError: (error: string) => void
+  mapCenter: { lat: number; lng: number }
+  mapZoom: number
+  onMapCenterChange: (center: { lat: number; lng: number }) => void
+  onMapZoomChange: (zoom: number) => void
 }
 
 export default function MapSection({
@@ -19,32 +24,50 @@ export default function MapSection({
   selectedRestaurant,
   setSelectedRestaurant,
   onError,
+  mapCenter,
+  mapZoom,
+  onMapCenterChange,
+  onMapZoomChange,
 }: MapSectionProps) {
-  const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.978 }) // 서울 시청 좌표
-  const [mapZoom, setMapZoom] = useState(13)
   const [showCurrentLocation, setShowCurrentLocation] = useState(false)
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [isMapLoaded, setIsMapLoaded] = useState(false)
+  const mapRef = useRef<google.maps.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
   // 컴포넌트 마운트 시 콘솔에 정보 출력
   useEffect(() => {
     console.log("MapSection 컴포넌트 마운트됨")
     console.log("맵 컨테이너 크기:", mapContainerRef.current?.offsetWidth, "x", mapContainerRef.current?.offsetHeight)
-
-    // 맵 컨테이너 크기가 0이면 경고
-    if (
-      mapContainerRef.current &&
-      (mapContainerRef.current.offsetWidth === 0 || mapContainerRef.current.offsetHeight === 0)
-    ) {
-      console.warn("맵 컨테이너의 크기가 0입니다. 지도가 보이지 않을 수 있습니다.")
-    }
   }, [])
 
+  // 선택된 레스토랑이 변경될 때 지도 중심 이동
+  useEffect(() => {
+    if (selectedRestaurant && mapRef.current) {
+      console.log("선택된 레스토랑으로 지도 이동:", selectedRestaurant.name)
+      const newCenter = { lat: selectedRestaurant.lat, lng: selectedRestaurant.lng }
+      onMapCenterChange(newCenter)
+      onMapZoomChange(16) // 더 가깝게 확대
+    }
+  }, [selectedRestaurant, onMapCenterChange, onMapZoomChange])
+
   // 지도 로드 완료 시 호출
-  const handleMapLoad = () => {
+  const handleMapLoad = (map: google.maps.Map) => {
     console.log("Google Maps 로드 성공")
+    mapRef.current = map
     setIsMapLoaded(true)
+
+    // 지도 이벤트 리스너 추가
+    map.addListener("dragend", () => {
+      const center = map.getCenter()
+      if (center) {
+        onMapCenterChange({ lat: center.lat(), lng: center.lng() })
+      }
+    })
+
+    map.addListener("zoom_changed", () => {
+      onMapZoomChange(map.getZoom() || mapZoom)
+    })
   }
 
   // 지도 로드 실패 시 호출
@@ -55,9 +78,8 @@ export default function MapSection({
 
   // 마커 클릭 시 해당 맛집 선택
   const handleMarkerClick = (restaurant: Restaurant) => {
+    console.log("마커 클릭:", restaurant.name)
     setSelectedRestaurant(restaurant)
-    setMapCenter({ lat: restaurant.lat, lng: restaurant.lng })
-    setMapZoom(15)
   }
 
   // 정보창 닫기
@@ -68,19 +90,14 @@ export default function MapSection({
   // 현재 위치 찾기
   const handleLocationFound = (position: { lat: number; lng: number }) => {
     setCurrentLocation(position)
-    setMapCenter(position)
-    setMapZoom(15)
+    onMapCenterChange(position)
+    onMapZoomChange(15)
     setShowCurrentLocation(true)
   }
 
   return (
-    <div ref={mapContainerRef} className="w-full h-full relative bg-gray-100 border border-gray-300">
+    <div ref={mapContainerRef} className="w-full h-full relative bg-gray-100">
       <CurrentLocationButton onLocationFound={handleLocationFound} />
-
-      {/* 지도 컨테이너 크기 표시 (디버깅용) */}
-      <div className="absolute bottom-4 left-4 z-10 bg-white px-2 py-1 text-xs rounded shadow">
-        컨테이너: {mapContainerRef.current?.offsetWidth || 0} x {mapContainerRef.current?.offsetHeight || 0}
-      </div>
 
       <Map
         mapId="restaurant-map"
@@ -90,11 +107,12 @@ export default function MapSection({
         zoom={mapZoom}
         onLoad={handleMapLoad}
         onError={handleMapError}
-        gestureHandling="greedy"
+        gestureHandling="cooperative"
         disableDefaultUI={false}
         mapTypeControl={false}
         className="w-full h-full"
         style={{ width: "100%", height: "100%" }}
+        clickableIcons={false}
       >
         {restaurants.map((restaurant) => (
           <RestaurantMarker

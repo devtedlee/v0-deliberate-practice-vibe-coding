@@ -23,6 +23,9 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
   const [isDebugMode, setIsDebugMode] = useState(false)
   const [showMapList, setShowMapList] = useState(true)
   const [isV0Preview, setIsV0Preview] = useState(false)
+  const [currentUrl, setCurrentUrl] = useState<string>("")
+  const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.978 }) // 서울 시청 좌표
+  const [mapZoom, setMapZoom] = useState(13)
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
   // 필터링된 맛집 목록
@@ -30,6 +33,10 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
 
   // 컴포넌트 마운트 시 설정
   useEffect(() => {
+    // 현재 URL 저장
+    const fullUrl = window.location.href
+    setCurrentUrl(fullUrl)
+
     // v0 preview 환경 감지
     const isV0PreviewEnvironment = window.location.hostname.includes("vusercontent.net")
     setIsV0Preview(isV0PreviewEnvironment)
@@ -68,11 +75,36 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     console.log("API 키:", apiKey ? `유효함 (길이: ${apiKey.length})` : "설정되지 않음")
     console.log("현재 모드:", isPreviewMode ? "목록 모드" : "지도 모드")
     console.log("현재 환경:", isV0PreviewEnvironment ? "v0 preview" : "일반 환경")
-    console.log("현재 URL:", window.location.href)
+    console.log("현재 URL:", fullUrl)
   }, [apiKey, isPreviewMode])
 
+  // API 키 제한 설정에 추가할 패턴 생성
+  const getSuggestedPatterns = () => {
+    const hostname = window.location.hostname
+    const exactPattern = `https://${hostname}/*`
+    const wildcardPattern = hostname.includes("vusercontent.net")
+      ? "*.lite.vusercontent.net/*"
+      : `*.${hostname.split(".").slice(-2).join(".")}/*`
+
+    return {
+      exactPattern,
+      wildcardPattern,
+    }
+  }
+
+  // 맛집 선택 처리 - 목록에서 클릭 시
   const handleSelectRestaurant = (restaurant: Restaurant) => {
+    console.log("맛집 선택됨 (목록에서):", restaurant.name)
     setSelectedRestaurant(restaurant)
+
+    // 지도 모드로 전환 (목록 모드인 경우)
+    if (isPreviewMode) {
+      setIsPreviewMode(false)
+    }
+
+    // 지도 중심점 및 줌 레벨 변경
+    setMapCenter({ lat: restaurant.lat, lng: restaurant.lng })
+    setMapZoom(16)
   }
 
   const handleMapError = (error: string) => {
@@ -84,6 +116,16 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
       setIsV0Preview(true)
       setIsPreviewMode(true)
     }
+  }
+
+  // 지도 중심점 변경 처리
+  const handleMapCenterChange = (center: { lat: number; lng: number }) => {
+    setMapCenter(center)
+  }
+
+  // 지도 줌 레벨 변경 처리
+  const handleMapZoomChange = (zoom: number) => {
+    setMapZoom(zoom)
   }
 
   // 디버그 모드 토글
@@ -137,6 +179,9 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     window.history.pushState({}, "", url.toString())
   }
 
+  // 패턴 제안
+  const { exactPattern, wildcardPattern } = getSuggestedPatterns()
+
   // v0 preview 환경 경고 메시지
   const V0PreviewWarning = () => (
     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
@@ -155,13 +200,44 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
             <strong>v0 preview 환경 감지됨:</strong> 이 환경에서는 Google Maps API 키 제한으로 인해 지도가 표시되지
             않습니다.
           </p>
-          <p className="text-sm text-yellow-700 mt-1">
-            현재 URL: <code className="bg-yellow-100 px-1 py-0.5 rounded">{window.location.hostname}</code>
-          </p>
-          <p className="text-sm text-yellow-700 mt-2">
-            <strong>해결 방법:</strong> Google Cloud Console에서 API 키 제한 설정에{" "}
-            <code className="bg-yellow-100 px-1 py-0.5 rounded">*.lite.vusercontent.net/*</code> 패턴을 추가하세요.
-          </p>
+          <div className="mt-2 p-2 bg-yellow-100 rounded text-xs font-mono overflow-auto">
+            <p className="text-yellow-800">
+              <strong>현재 전체 URL:</strong>
+            </p>
+            <p className="text-yellow-800 break-all">{currentUrl}</p>
+          </div>
+          <div className="mt-3">
+            <p className="text-sm text-yellow-700">
+              <strong>API 키 제한 설정에 추가할 패턴:</strong>
+            </p>
+            <div className="mt-1 space-y-1">
+              <div className="flex items-center">
+                <code className="bg-yellow-100 px-2 py-1 rounded text-xs">{exactPattern}</code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(exactPattern)
+                    alert("패턴이 클립보드에 복사되었습니다!")
+                  }}
+                  className="ml-2 text-xs text-blue-600 hover:text-blue-800"
+                >
+                  복사
+                </button>
+              </div>
+              <p className="text-xs text-yellow-700">또는 더 넓은 범위의 와일드카드 패턴:</p>
+              <div className="flex items-center">
+                <code className="bg-yellow-100 px-2 py-1 rounded text-xs">{wildcardPattern}</code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(wildcardPattern)
+                    alert("패턴이 클립보드에 복사되었습니다!")
+                  }}
+                  className="ml-2 text-xs text-blue-600 hover:text-blue-800"
+                >
+                  복사
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -218,9 +294,16 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
             <p>
               <span className="font-medium">환경:</span> {isV0Preview ? "v0 preview" : "일반 환경"}
             </p>
+            <div className="mt-1 p-1 bg-gray-100 rounded">
+              <p className="font-medium">현재 URL:</p>
+              <p className="font-mono text-xs break-all">{currentUrl}</p>
+            </div>
             <p>
-              <span className="font-medium">현재 URL:</span>{" "}
-              <span className="font-mono text-xs break-all">{window.location.hostname}</span>
+              <span className="font-medium">지도 중심점:</span>{" "}
+              {`${mapCenter.lat.toFixed(4)}, ${mapCenter.lng.toFixed(4)}`}
+            </p>
+            <p>
+              <span className="font-medium">지도 줌 레벨:</span> {mapZoom}
             </p>
             <p>
               <span className="font-medium">컨테이너 크기:</span>{" "}
@@ -287,6 +370,10 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
                 selectedRestaurant={selectedRestaurant}
                 setSelectedRestaurant={setSelectedRestaurant}
                 onError={handleMapError}
+                mapCenter={mapCenter}
+                mapZoom={mapZoom}
+                onMapCenterChange={handleMapCenterChange}
+                onMapZoomChange={handleMapZoomChange}
               />
             </APIProvider>
           </div>
