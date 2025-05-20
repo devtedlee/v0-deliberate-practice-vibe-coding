@@ -45,6 +45,13 @@ export default function Home() {
       path: "/npm-stats",
       icon: "📊",
     },
+    {
+      id: 7,
+      title: "로컬 맛집 지도",
+      description: "내가 추천하는 동네 맛집들을 지도에서 확인해보세요.",
+      path: "/restaurant-map",
+      icon: "🍽️",
+    },
   ]
 
   return (
