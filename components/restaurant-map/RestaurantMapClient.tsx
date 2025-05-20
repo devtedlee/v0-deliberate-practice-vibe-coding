@@ -29,6 +29,16 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
   const [isUserControllingMap, setIsUserControllingMap] = useState(true) // 기본값을 true로 변경
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
+  // 개발 환경인지 확인
+  // 기존 코드:
+  // const isDevelopment = process.env.NODE_ENV === "development"
+
+  // 다음 코드로 변경:
+  // v0 프리뷰 환경이나 개발 환경에서 디버그 기능 활성화
+  const isDevelopmentOrPreview =
+    process.env.NODE_ENV === "development" ||
+    (typeof window !== "undefined" && window.location.hostname.includes("vusercontent.net"))
+
   // 필터링된 맛집 목록
   const filteredRestaurants = restaurants.filter((restaurant) => selectedCategories.includes(restaurant.category))
 
@@ -48,13 +58,16 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
       setMapError("v0 preview 환경에서는 지도가 로드되지 않습니다. API 키 제한 때문입니다.")
     }
 
-    // URL에서 디버그 모드 확인
-    const urlParams = new URLSearchParams(window.location.search)
-    const debugParam = urlParams.get("debug")
-    setIsDebugMode(debugParam === "true")
+    // URL에서 디버그 모드 확인 (개발 환경이나 v0 프리뷰에서만)
+    if (isDevelopmentOrPreview) {
+      const urlParams = new URLSearchParams(window.location.search)
+      const debugParam = urlParams.get("debug")
+      setIsDebugMode(debugParam === "true")
+    }
 
     // URL에서 모드 확인 (v0 preview가 아닐 때만)
     if (!isV0PreviewEnvironment) {
+      const urlParams = new URLSearchParams(window.location.search)
       const modeParam = urlParams.get("mode")
       if (modeParam === "preview") {
         setIsPreviewMode(true)
@@ -64,6 +77,7 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     }
 
     // URL에서 보기 모드 확인
+    const urlParams = new URLSearchParams(window.location.search)
     const viewParam = urlParams.get("view")
     if (viewParam === "both") {
       setShowMapList(true)
@@ -76,8 +90,9 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     console.log("API 키:", apiKey ? `유효함 (길이: ${apiKey.length})` : "설정되지 않음")
     console.log("현재 모드:", isPreviewMode ? "목록 모드" : "지도 모드")
     console.log("현재 환경:", isV0PreviewEnvironment ? "v0 preview" : "일반 환경")
+    console.log("개발 환경:", isDevelopmentOrPreview ? "개발" : "운영")
     console.log("현재 URL:", fullUrl)
-  }, [apiKey, isPreviewMode])
+  }, [apiKey, isPreviewMode, isDevelopmentOrPreview])
 
   // API 키 제한 설정에 추가할 패턴 생성 - 클라이언트 사이드에서만 실행되는 함수
   const getSuggestedPatterns = () => {
@@ -142,8 +157,11 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     setIsUserControllingMap(isControlling)
   }
 
-  // 디버그 모드 토글
+  // 디버그 모드 토글 함수 수정:
+  // 디버그 모드 토글 (개발 환경이나 v0 프리뷰에서만 작동)
   const toggleDebugMode = () => {
+    if (!isDevelopmentOrPreview) return
+
     const newDebugMode = !isDebugMode
     setIsDebugMode(newDebugMode)
 
@@ -291,18 +309,21 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
             {showMapList ? "지도만 보기" : "지도+목록 보기"}
           </button>
         )}
-        <button
-          onClick={toggleDebugMode}
-          className={`px-3 py-1 rounded-md text-xs font-medium ${
-            isDebugMode ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          {isDebugMode ? "디버그 끄기" : "디버그 켜기"}
-        </button>
+        {/* 개발 환경이나 v0 프리뷰에서만 디버그 버튼 표시 */}
+        {isDevelopmentOrPreview && (
+          <button
+            onClick={toggleDebugMode}
+            className={`px-3 py-1 rounded-md text-xs font-medium ${
+              isDebugMode ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+            }`}
+          >
+            {isDebugMode ? "디버그 끄기" : "디버그 켜기"}
+          </button>
+        )}
       </div>
 
-      {/* 디버그 정보 표시 */}
-      {isDebugMode && (
+      {/* 디버그 정보 표시 (개발 환경이나 v0 프리뷰 & 디버그 모드에서만) */}
+      {isDevelopmentOrPreview && isDebugMode && (
         <div className="absolute top-12 right-4 z-20 bg-white p-3 rounded-md shadow-md text-xs w-64">
           <h4 className="font-bold mb-2">디버그 정보</h4>
           <div className="space-y-1">
@@ -353,7 +374,8 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
         </div>
       )}
 
-      {isDebugMode && !isV0Preview && (
+      {/* 개발 환경이나 v0 프리뷰 & 디버그 모드일 때만 SimpleMapTest 표시 */}
+      {isDevelopmentOrPreview && isDebugMode && !isV0Preview && (
         <div className="absolute top-64 right-4 z-20 w-64">
           <SimpleMapTest apiKey={apiKey} />
         </div>
