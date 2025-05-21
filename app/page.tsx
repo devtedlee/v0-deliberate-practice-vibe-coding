@@ -52,6 +52,13 @@ export default function Home() {
       path: "/restaurant-map",
       icon: "🍽️",
     },
+    {
+      id: 8,
+      title: "랜덤 색상 팔레트 생성기",
+      description: "랜덤 색상 또는 Tailwind 색상으로 팔레트를 생성하고 복사할 수 있습니다.",
+      path: "/color-palette",
+      icon: "🎨",
+    },
   ]
 
   return (
