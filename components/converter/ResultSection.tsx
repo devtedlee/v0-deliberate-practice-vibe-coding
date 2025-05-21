@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { type UnitType, getUnitsByType } from "@/data/units"
 
 interface ResultSectionProps {
@@ -7,7 +8,7 @@ interface ResultSectionProps {
   unitType: UnitType
 }
 
-export default function ResultSection({ result, fromUnit, toUnit, unitType }: ResultSectionProps) {
+function ResultSection({ result, fromUnit, toUnit, unitType }: ResultSectionProps) {
   // 단위 심볼 가져오기
   const getUnitSymbol = (unitValue: string): string => {
     const units = getUnitsByType(unitType)
@@ -29,3 +30,5 @@ export default function ResultSection({ result, fromUnit, toUnit, unitType }: Re
     </div>
   )
 }
+
+export default memo(ResultSection)

@@ -1,8 +1,10 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { ExternalLink } from "lucide-react"
+import { useEffect, useRef, useMemo, memo } from "react"
+// ExternalLink is not used directly in RestaurantList anymore, it's in RestaurantListItemCard
+// import { ExternalLink } from "lucide-react"
 import type { Restaurant } from "@/types/restaurant"
+import RestaurantListItemCard from "./RestaurantListItemCard"
 
 interface RestaurantListProps {
   restaurants: Restaurant[]
@@ -10,7 +12,7 @@ interface RestaurantListProps {
   selectedRestaurantId?: number
 }
 
-export default function RestaurantList({ restaurants, onSelectRestaurant, selectedRestaurantId }: RestaurantListProps) {
+function RestaurantList({ restaurants, onSelectRestaurant, selectedRestaurantId }: RestaurantListProps) {
   // 선택된 맛집 요소에 대한 참조
   const selectedItemRef = useRef<HTMLDivElement>(null)
 
@@ -22,17 +24,19 @@ export default function RestaurantList({ restaurants, onSelectRestaurant, select
     }
   }, [selectedRestaurantId])
 
-  // 카테고리별 맛집 그룹화
-  const groupedByCategory = restaurants.reduce(
-    (acc, restaurant) => {
-      if (!acc[restaurant.category]) {
-        acc[restaurant.category] = []
-      }
-      acc[restaurant.category].push(restaurant)
-      return acc
-    },
-    {} as Record<string, Restaurant[]>,
-  )
+  // 카테고리별 맛집 그룹화 (useMemo 적용)
+  const groupedByCategory = useMemo(() => {
+    return restaurants.reduce(
+      (acc, restaurant) => {
+        if (!acc[restaurant.category]) {
+          acc[restaurant.category] = []
+        }
+        acc[restaurant.category].push(restaurant)
+        return acc
+      },
+      {} as Record<string, Restaurant[]>,
+    )
+  }, [restaurants])
 
   // 카테고리별 색상 매핑
   const getCategoryColor = (category: string) => {
@@ -64,35 +68,13 @@ export default function RestaurantList({ restaurants, onSelectRestaurant, select
 
           <div className="space-y-3">
             {categoryRestaurants.map((restaurant) => (
-              <div
+              <RestaurantListItemCard
                 key={restaurant.id}
                 ref={restaurant.id === selectedRestaurantId ? selectedItemRef : null}
-                className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                  restaurant.id === selectedRestaurantId
-                    ? "border-blue-500 bg-blue-50 shadow-md transform scale-102"
-                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
-                }`}
-                onClick={() => onSelectRestaurant(restaurant)}
-              >
-                <h4 className="font-medium">{restaurant.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">{restaurant.description}</p>
-                <div className="text-xs text-gray-500 mt-2">
-                  <p>주소: {restaurant.address}</p>
-                  <p>메뉴: {restaurant.menu}</p>
-                </div>
-                {restaurant.link && (
-                  <a
-                    href={restaurant.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 mt-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    <span>웹사이트</span>
-                  </a>
-                )}
-              </div>
+                restaurant={restaurant}
+                isSelected={restaurant.id === selectedRestaurantId}
+                onSelectRestaurant={onSelectRestaurant}
+              />
             ))}
           </div>
         </div>
@@ -100,3 +82,5 @@ export default function RestaurantList({ restaurants, onSelectRestaurant, select
     </div>
   )
 }
+
+export default memo(RestaurantList)

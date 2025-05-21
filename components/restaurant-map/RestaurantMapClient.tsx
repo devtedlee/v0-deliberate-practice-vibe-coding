@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { APIProvider } from "@vis.gl/react-google-maps"
 import type { Restaurant } from "@/types/restaurant"
 import RestaurantList from "./RestaurantList"
@@ -40,7 +40,9 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     (typeof window !== "undefined" && window.location.hostname.includes("vusercontent.net"))
 
   // 필터링된 맛집 목록
-  const filteredRestaurants = restaurants.filter((restaurant) => selectedCategories.includes(restaurant.category))
+  const filteredRestaurants = useMemo(() => {
+    return restaurants.filter((restaurant) => selectedCategories.includes(restaurant.category))
+  }, [restaurants, selectedCategories])
 
   // 컴포넌트 마운트 시 설정 - 클라이언트 사이드에서만 실행
   useEffect(() => {
@@ -94,72 +96,82 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
     console.log("현재 URL:", fullUrl)
   }, [apiKey, isPreviewMode, isDevelopmentOrPreview])
 
-  // API 키 제한 설정에 추가할 패턴 생성 - 클라이언트 사이드에서만 실행되는 함수
-  const getSuggestedPatterns = () => {
+  // API 키 제한 설정에 추가할 패턴 생성
+  const suggestedPatterns = useMemo(() => {
     if (typeof window === "undefined") {
       return { exactPattern: "", wildcardPattern: "" }
     }
-
     const hostname = window.location.hostname
     const exactPattern = `https://${hostname}/*`
     const wildcardPattern = hostname.includes("vusercontent.net")
       ? "*.lite.vusercontent.net/*"
       : `*.${hostname.split(".").slice(-2).join(".")}/*`
-
-    return {
-      exactPattern,
-      wildcardPattern,
-    }
-  }
+    return { exactPattern, wildcardPattern }
+  }, []) // Empty dependency array as hostname is stable for the component's lifetime
 
   // 맛집 선택 처리 - 목록에서 클릭 시
-  const handleSelectRestaurant = (restaurant: Restaurant) => {
-    console.log("맛집 선택됨 (목록에서):", restaurant.name)
-    setSelectedRestaurant(restaurant)
+  const handleSelectRestaurant = useCallback(
+    (restaurant: Restaurant) => {
+      console.log("맛집 선택됨 (목록에서):", restaurant.name)
+      setSelectedRestaurant(restaurant)
 
-    // 지도 모드로 전환 (목록 모드인 경우)
-    if (isPreviewMode) {
-      setIsPreviewMode(false)
-    }
+      // 지도 모드로 전환 (목록 모드인 경우)
+      if (isPreviewMode) {
+        setIsPreviewMode(false)
+      }
 
-    // 사용자 지도 조작 상태 비활성화 (프로그래밍 방식 이동)
-    setIsUserControllingMap(false)
+      // 사용자 지도 조작 상태 비활성화 (프로그래밍 방식 이동)
+      setIsUserControllingMap(false)
 
-    // 지도 중심점 및 줌 레벨 변경 (기록용)
-    setMapCenter({ lat: restaurant.lat, lng: restaurant.lng })
-    setMapZoom(16)
-  }
+      // 지도 중심점 및 줌 레벨 변경 (기록용)
+      setMapCenter({ lat: restaurant.lat, lng: restaurant.lng })
+      setMapZoom(16)
+    },
+    [isPreviewMode, setIsPreviewMode, setSelectedRestaurant, setIsUserControllingMap, setMapCenter, setMapZoom],
+  )
 
-  const handleMapError = (error: string) => {
-    console.error("Map Error:", error)
-    setMapError(error)
+  const handleMapError = useCallback(
+    (error: string) => {
+      console.error("Map Error:", error)
+      setMapError(error)
 
-    // 리퍼러 오류인 경우 v0 preview 환경으로 간주
-    if (error.includes("RefererNotAllowedMapError")) {
-      setIsV0Preview(true)
-      setIsPreviewMode(true)
-    }
-  }
+      // 리퍼러 오류인 경우 v0 preview 환경으로 간주
+      if (error.includes("RefererNotAllowedMapError")) {
+        setIsV0Preview(true)
+        setIsPreviewMode(true)
+      }
+    },
+    [setIsV0Preview, setIsPreviewMode],
+  )
 
   // 지도 중심점 변경 처리 (기록용)
-  const handleMapCenterChange = (center: { lat: number; lng: number }) => {
-    setMapCenter(center)
-  }
+  const handleMapCenterChange = useCallback(
+    (center: { lat: number; lng: number }) => {
+      setMapCenter(center)
+    },
+    [setMapCenter],
+  )
 
   // 지도 줌 레벨 변경 처리 (기록용)
-  const handleMapZoomChange = (zoom: number) => {
-    setMapZoom(zoom)
-  }
+  const handleMapZoomChange = useCallback(
+    (zoom: number) => {
+      setMapZoom(zoom)
+    },
+    [setMapZoom],
+  )
 
   // 사용자 지도 조작 상태 변경 처리
-  const handleUserMapControlChange = (isControlling: boolean) => {
-    console.log(`사용자 지도 조작 상태 변경: ${isControlling ? "조작 중" : "조작 종료"}`)
-    setIsUserControllingMap(isControlling)
-  }
+  const handleUserMapControlChange = useCallback(
+    (isControlling: boolean) => {
+      console.log(`사용자 지도 조작 상태 변경: ${isControlling ? "조작 중" : "조작 종료"}`)
+      setIsUserControllingMap(isControlling)
+    },
+    [setIsUserControllingMap],
+  )
 
   // 디버그 모드 토글 함수 수정:
   // 디버그 모드 토글 (개발 환경이나 v0 프리뷰에서만 작동)
-  const toggleDebugMode = () => {
+  const toggleDebugMode = useCallback(() => {
     if (!isDevelopmentOrPreview) return
 
     const newDebugMode = !isDebugMode
@@ -175,10 +187,10 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
       }
       window.history.pushState({}, "", url.toString())
     }
-  }
+  }, [isDevelopmentOrPreview, isDebugMode, setIsDebugMode])
 
   // 보기 모드 토글
-  const toggleViewMode = () => {
+  const toggleViewMode = useCallback(() => {
     const newShowMapList = !showMapList
     setShowMapList(newShowMapList)
 
@@ -192,10 +204,10 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
       }
       window.history.pushState({}, "", url.toString())
     }
-  }
+  }, [showMapList, setShowMapList])
 
   // 지도/목록 모드 토글
-  const toggleMapMode = () => {
+  const toggleMapMode = useCallback(() => {
     // v0 preview 환경에서는 지도 모드로 전환 불가
     if (isV0Preview && !isPreviewMode) {
       if (typeof window !== "undefined") {
@@ -217,10 +229,10 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
       }
       window.history.pushState({}, "", url.toString())
     }
-  }
+  }, [isV0Preview, isPreviewMode, setIsPreviewMode])
 
   // 패턴 제안 - 클라이언트 사이드에서만 실행
-  const { exactPattern, wildcardPattern } = getSuggestedPatterns()
+  const { exactPattern, wildcardPattern } = suggestedPatterns
 
   // v0 preview 환경 경고 메시지
   const V0PreviewWarning = () => (

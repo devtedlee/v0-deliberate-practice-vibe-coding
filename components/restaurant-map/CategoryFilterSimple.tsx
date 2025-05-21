@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo, useCallback, memo } from "react"
 import { restaurantsData } from "@/data/restaurants"
 
 interface CategoryFilterSimpleProps {
@@ -7,27 +8,32 @@ interface CategoryFilterSimpleProps {
   onCategoryChange: (categories: string[]) => void
 }
 
-export default function CategoryFilterSimple({ selectedCategories, onCategoryChange }: CategoryFilterSimpleProps) {
-  // 모든 카테고리 추출
-  const allCategories = Array.from(new Set(restaurantsData.map((r) => r.category)))
+function CategoryFilterSimple({ selectedCategories, onCategoryChange }: CategoryFilterSimpleProps) {
+  // 모든 카테고리 추출 (useMemo 적용)
+  const allCategories = useMemo(() => {
+    return Array.from(new Set(restaurantsData.map((r) => r.category)))
+  }, [])
 
-  // 카테고리 토글 처리
-  const toggleCategory = (category: string) => {
-    if (selectedCategories.includes(category)) {
-      onCategoryChange(selectedCategories.filter((c) => c !== category))
-    } else {
-      onCategoryChange([...selectedCategories, category])
-    }
-  }
+  // 카테고리 토글 처리 (useCallback 적용)
+  const toggleCategory = useCallback(
+    (category: string) => {
+      if (selectedCategories.includes(category)) {
+        onCategoryChange(selectedCategories.filter((c) => c !== category))
+      } else {
+        onCategoryChange([...selectedCategories, category])
+      }
+    },
+    [selectedCategories, onCategoryChange],
+  )
 
-  // 모든 카테고리 선택/해제
-  const toggleAll = () => {
+  // 모든 카테고리 선택/해제 (useCallback 적용)
+  const toggleAll = useCallback(() => {
     if (selectedCategories.length === allCategories.length) {
       onCategoryChange([])
     } else {
       onCategoryChange([...allCategories])
     }
-  }
+  }, [selectedCategories, allCategories, onCategoryChange])
 
   return (
     <div
@@ -64,6 +70,10 @@ export default function CategoryFilterSimple({ selectedCategories, onCategoryCha
 }
 
 // 카테고리별 색상 매핑
+// 이 함수는 props나 state에 의존하지 않으므로 컴포넌트 외부에 두거나,
+// 컴포넌트 내부에 두더라도 useCallback 등으로 감쌀 필요는 일반적으로 없습니다.
+// React.memo는 props가 변경되지 않으면 리렌더링을 방지해주며,
+// 이 함수는 렌더링 로직의 일부로 실행되지만 그 자체가 리렌더링의 원인이 되지는 않습니다.
 function getCategoryColor(category: string) {
   switch (category) {
     case "한식":
@@ -80,3 +90,5 @@ function getCategoryColor(category: string) {
       return "bg-gray-500"
   }
 }
+
+export default memo(CategoryFilterSimple)
