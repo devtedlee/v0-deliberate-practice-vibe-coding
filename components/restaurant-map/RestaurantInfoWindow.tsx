@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { ExternalLink } from "lucide-react"
 import type { Restaurant } from "@/types/restaurant"
 
@@ -5,7 +6,7 @@ interface RestaurantInfoWindowProps {
   restaurant: Restaurant
 }
 
-export default function RestaurantInfoWindow({ restaurant }: RestaurantInfoWindowProps) {
+function RestaurantInfoWindow({ restaurant }: RestaurantInfoWindowProps) {
   return (
     <div className="p-2 max-w-xs">
       <div className="flex items-start justify-between">
@@ -43,3 +44,5 @@ export default function RestaurantInfoWindow({ restaurant }: RestaurantInfoWindo
     </div>
   )
 }
+
+export default memo(RestaurantInfoWindow)

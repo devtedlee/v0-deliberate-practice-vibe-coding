@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import { type UnitInfo, type UnitType, getUnitsByType } from "@/data/units"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -82,3 +82,5 @@ export default function InputSection({
     </div>
   )
 }
+
+export default memo(InputSection)

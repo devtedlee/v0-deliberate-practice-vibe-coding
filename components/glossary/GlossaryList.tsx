@@ -1,3 +1,4 @@
+import { memo } from "react"
 import type { GlossaryTerm } from "@/data/glossary"
 import TermItem from "./TermItem"
 
@@ -5,7 +6,7 @@ interface GlossaryListProps {
   terms: GlossaryTerm[]
 }
 
-export default function GlossaryList({ terms }: GlossaryListProps) {
+function GlossaryList({ terms }: GlossaryListProps) {
   if (terms.length === 0) {
     return (
       <div className="text-center py-10">
@@ -22,3 +23,5 @@ export default function GlossaryList({ terms }: GlossaryListProps) {
     </div>
   )
 }
+
+export default memo(GlossaryList)

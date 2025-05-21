@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { Map, InfoWindow, AdvancedMarker, useMap } from "@vis.gl/react-google-maps"
 import RestaurantMarker from "./RestaurantMarker"
 import RestaurantInfoWindow from "./RestaurantInfoWindow"
@@ -124,7 +124,10 @@ function MapController({
   return null
 }
 
-export default function MapSection({
+// Memoize MapController
+const MemoizedMapController = memo(MapController)
+
+function MapSection({
   restaurants,
   selectedRestaurant,
   setSelectedRestaurant,
@@ -150,86 +153,90 @@ export default function MapSection({
   }, [])
 
   // 지도 인스턴스 준비 완료 시 호출
-  const handleMapReady = (map: google.maps.Map) => {
-    console.log("Google Maps 인스턴스 준비 완료")
-    mapRef.current = map
+  const handleMapReady = useCallback(
+    (map: google.maps.Map) => {
+      console.log("Google Maps 인스턴스 준비 완료")
+      mapRef.current = map
 
-    // 지도 이벤트 리스너 추가
-    map.addListener("dragstart", () => {
-      console.log("지도 드래그 시작")
-      setIsDragging(true)
-    })
+      // 지도 이벤트 리스너 추가
+      map.addListener("dragstart", () => {
+        console.log("지도 드래그 시작")
+        setIsDragging(true)
+      })
 
-    map.addListener("dragend", () => {
-      console.log("지도 드래그 종료")
-      setIsDragging(false)
-      const center = map.getCenter()
-      if (center) {
-        // 부모에게 변경 알림
-        onMapCenterChange({ lat: center.lat(), lng: center.lng() })
-      }
-    })
+      map.addListener("dragend", () => {
+        console.log("지도 드래그 종료")
+        setIsDragging(false)
+        const center = map.getCenter()
+        if (center) {
+          onMapCenterChange({ lat: center.lat(), lng: center.lng() })
+        }
+      })
 
-    map.addListener("zoom_changed", () => {
-      const newZoom = map.getZoom() || mapZoom
-      onMapZoomChange(newZoom)
-    })
+      map.addListener("zoom_changed", () => {
+        const newZoom = map.getZoom() || mapZoom
+        onMapZoomChange(newZoom)
+      })
 
-    // 센터 변경 이벤트 추가
-    map.addListener("center_changed", () => {
-      const center = map.getCenter()
-      if (center) {
-        // 내부적으로만 추적, 드래그 종료 시에만 부모에게 알림
-        const newCenter = { lat: center.lat(), lng: center.lng() }
-        console.log("지도 중심 변경:", newCenter)
-      }
-    })
-  }
+      map.addListener("center_changed", () => {
+        const center = map.getCenter()
+        if (center) {
+          const newCenter = { lat: center.lat(), lng: center.lng() }
+          console.log("지도 중심 변경:", newCenter)
+        }
+      })
+    },
+    [mapZoom, onMapCenterChange, onMapZoomChange],
+  )
 
   // 지도 로드 완료 시 호출
-  const handleMapLoad = () => {
+  const handleMapLoad = useCallback(() => {
     console.log("Google Maps 로드 성공")
     setIsMapLoaded(true)
-  }
+  }, [setIsMapLoaded])
 
   // 지도 로드 실패 시 호출
-  const handleMapError = (error: Error) => {
-    console.error("Google Maps 로드 실패:", error)
-    onError(`지도 로드 실패: ${error.message}`)
-  }
+  const handleMapError = useCallback(
+    (error: Error) => {
+      console.error("Google Maps 로드 실패:", error)
+      onError(`지도 로드 실패: ${error.message}`)
+    },
+    [onError],
+  )
 
   // 마커 클릭 시 해당 맛집 선택
-  const handleMarkerClick = (restaurant: Restaurant) => {
-    console.log("마커 클릭:", restaurant.name)
-    setSelectedRestaurant(restaurant)
-  }
+  const handleMarkerClick = useCallback(
+    (restaurant: Restaurant) => {
+      console.log("마커 클릭:", restaurant.name)
+      setSelectedRestaurant(restaurant)
+    },
+    [setSelectedRestaurant],
+  )
 
   // 정보창 닫기
-  const handleInfoWindowClose = () => {
+  const handleInfoWindowClose = useCallback(() => {
     setSelectedRestaurant(null)
-  }
+  }, [setSelectedRestaurant])
 
   // 현재 위치 찾기
-  const handleLocationFound = (position: { lat: number; lng: number }) => {
-    setCurrentLocation(position)
-    setShowCurrentLocation(true)
+  const handleLocationFound = useCallback(
+    (position: { lat: number; lng: number }) => {
+      setCurrentLocation(position)
+      setShowCurrentLocation(true)
 
-    // 지도 인스턴스가 있으면 직접 이동
-    if (mapRef.current) {
-      mapRef.current.panTo(position)
-      mapRef.current.setZoom(15)
-
-      // 이동 애니메이션이 완료되면 즉시 사용자 조작 상태로 전환
-      setTimeout(() => {
-        console.log("현재 위치로 이동 완료, 사용자 조작 상태로 전환")
-        onUserMapControlChange(true)
-      }, 300)
-    }
-
-    // 부모 컴포넌트 상태 업데이트 (기록용)
-    onMapCenterChange(position)
-    onMapZoomChange(15)
-  }
+      if (mapRef.current) {
+        mapRef.current.panTo(position)
+        mapRef.current.setZoom(15)
+        setTimeout(() => {
+          console.log("현재 위치로 이동 완료, 사용자 조작 상태로 전환")
+          onUserMapControlChange(true)
+        }, 300)
+      }
+      onMapCenterChange(position)
+      onMapZoomChange(15)
+    },
+    [setCurrentLocation, setShowCurrentLocation, mapRef, onUserMapControlChange, onMapCenterChange, onMapZoomChange],
+  )
 
   return (
     <div
@@ -256,7 +263,7 @@ export default function MapSection({
         clickableIcons={false}
         draggable={true}
       >
-        <MapController
+        <MemoizedMapController
           onMapReady={handleMapReady}
           selectedRestaurant={selectedRestaurant}
           onUserMapControlChange={onUserMapControlChange}
@@ -266,7 +273,7 @@ export default function MapSection({
           <RestaurantMarker
             key={restaurant.id}
             restaurant={restaurant}
-            onClick={() => handleMarkerClick(restaurant)}
+            onClick={handleMarkerClick} // Pass memoized handleMarkerClick directly
             isSelected={selectedRestaurant?.id === restaurant.id}
           />
         ))}
@@ -291,3 +298,5 @@ export default function MapSection({
     </div>
   )
 }
+
+export default memo(MapSection)

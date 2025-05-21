@@ -1,15 +1,16 @@
 "use client"
 
+import { memo } from "react"
 import { AdvancedMarker } from "@vis.gl/react-google-maps"
 import type { Restaurant } from "@/types/restaurant"
 
 interface RestaurantMarkerProps {
   restaurant: Restaurant
-  onClick: () => void
+  onClick: (restaurant: Restaurant) => void // Changed to accept restaurant object
   isSelected: boolean
 }
 
-export default function RestaurantMarker({ restaurant, onClick, isSelected }: RestaurantMarkerProps) {
+function RestaurantMarker({ restaurant, onClick, isSelected }: RestaurantMarkerProps) {
   // 카테고리별 마커 색상 지정
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -29,7 +30,11 @@ export default function RestaurantMarker({ restaurant, onClick, isSelected }: Re
   }
 
   return (
-    <AdvancedMarker position={{ lat: restaurant.lat, lng: restaurant.lng }} onClick={onClick} title={restaurant.name}>
+    <AdvancedMarker
+      position={{ lat: restaurant.lat, lng: restaurant.lng }}
+      onClick={() => onClick(restaurant)} // Call prop with restaurant object
+      title={restaurant.name}
+    >
       <div className="relative cursor-pointer transform transition-transform hover:scale-110">
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md border-2 ${
@@ -52,3 +57,5 @@ export default function RestaurantMarker({ restaurant, onClick, isSelected }: Re
 function getInitial(name: string): string {
   return name.charAt(0)
 }
+
+export default memo(RestaurantMarker)

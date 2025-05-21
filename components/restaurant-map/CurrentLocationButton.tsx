@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, memo } from "react"
 import { MapPin } from "lucide-react"
 
 interface CurrentLocationButtonProps {
   onLocationFound: (position: { lat: number; lng: number }) => void
 }
 
-export default function CurrentLocationButton({ onLocationFound }: CurrentLocationButtonProps) {
+function CurrentLocationButton({ onLocationFound }: CurrentLocationButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,3 +54,5 @@ export default function CurrentLocationButton({ onLocationFound }: CurrentLocati
     </div>
   )
 }
+
+export default memo(CurrentLocationButton)

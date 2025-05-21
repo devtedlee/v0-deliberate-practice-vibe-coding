@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { type UnitType, getUnitsByType } from "@/data/units"
 
 interface ResultSectionProps {
@@ -29,3 +30,5 @@ export default function ResultSection({ result, fromUnit, toUnit, unitType }: Re
     </div>
   )
 }
+
+export default memo(ResultSection)
