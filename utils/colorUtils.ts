@@ -1,4 +1,6 @@
 // Tailwind CSS 색상 팔레트
+import { checkTailwindAvailability } from "./tailwindValidator"
+
 export const tailwindColors = {
   red: ["#fef2f2", "#fee2e2", "#fecaca", "#fca5a5", "#f87171", "#ef4444", "#dc2626", "#b91c1c", "#991b1b", "#7f1d1d"],
   orange: [
@@ -118,8 +120,18 @@ export function generateRandomPalette(count: number): string[] {
 
 /**
  * Tailwind CSS 색상 팔레트에서 랜덤 색상을 선택합니다.
+ * 설정 오류가 있을 경우 대체 색상을 반환합니다.
  */
 export function getRandomTailwindColor(): string {
+  // Tailwind 설정 유효성 검사
+  const isTailwindValid = checkTailwindAvailability(tailwindColors)
+
+  if (!isTailwindValid) {
+    // Tailwind 설정에 문제가 있으면 랜덤 HEX 색상 반환
+    console.warn("Tailwind 설정에 문제가 있어 랜덤 색상을 대신 생성합니다.")
+    return generateRandomHexColor()
+  }
+
   // 랜덤 색상 이름 선택
   const randomColorName = colorNames[Math.floor(Math.random() * colorNames.length)]
   // 선택된 색상의 음영 배열
@@ -131,8 +143,18 @@ export function getRandomTailwindColor(): string {
 
 /**
  * Tailwind CSS 색상 팔레트에서 지정된 개수만큼 랜덤 색상 배열을 생성합니다.
+ * 설정 오류가 있을 경우 랜덤 HEX 색상으로 대체합니다.
  */
 export function generateTailwindPalette(count: number): string[] {
+  // Tailwind 설정 유효성 검사
+  const isTailwindValid = checkTailwindAvailability(tailwindColors)
+
+  if (!isTailwindValid) {
+    // Tailwind 설정에 문제가 있으면 랜덤 HEX 색상 팔레트 반환
+    console.warn("Tailwind 설정에 문제가 있어 랜덤 색상 팔레트를 대신 생성합니다.")
+    return generateRandomPalette(count)
+  }
+
   return Array.from({ length: count }, () => getRandomTailwindColor())
 }
 

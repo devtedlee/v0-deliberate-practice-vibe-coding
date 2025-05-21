@@ -4,9 +4,15 @@ interface PaletteOptionsProps {
   paletteType: "random" | "tailwind"
   onTypeChange: (type: "random" | "tailwind") => void
   onGenerateNew: () => void
+  isTailwindDisabled?: boolean
 }
 
-export default function PaletteOptions({ paletteType, onTypeChange, onGenerateNew }: PaletteOptionsProps) {
+export default function PaletteOptions({
+  paletteType,
+  onTypeChange,
+  onGenerateNew,
+  isTailwindDisabled = false,
+}: PaletteOptionsProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
       <div className="flex items-center bg-gray-100 p-1 rounded-full">
@@ -20,11 +26,18 @@ export default function PaletteOptions({ paletteType, onTypeChange, onGenerateNe
         </button>
         <button
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            paletteType === "tailwind" ? "bg-white text-gray-800 shadow-sm" : "text-gray-600 hover:text-gray-800"
+            paletteType === "tailwind"
+              ? "bg-white text-gray-800 shadow-sm"
+              : isTailwindDisabled
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-gray-600 hover:text-gray-800"
           }`}
-          onClick={() => onTypeChange("tailwind")}
+          onClick={() => !isTailwindDisabled && onTypeChange("tailwind")}
+          disabled={isTailwindDisabled}
+          title={isTailwindDisabled ? "Tailwind 설정에 문제가 있어 사용할 수 없습니다" : ""}
         >
           Tailwind Colors
+          {isTailwindDisabled && <span className="ml-1 text-xs">⚠️</span>}
         </button>
       </div>
 
