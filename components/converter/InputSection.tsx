@@ -16,7 +16,7 @@ interface InputSectionProps {
   onToUnitChange: (unit: string) => void
 }
 
-export default function InputSection({
+function InputSection({
   unitType,
   inputValue,
   fromUnit,
