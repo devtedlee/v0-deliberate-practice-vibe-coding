@@ -16,9 +16,13 @@ export default function SimpleMapTest({ apiKey }: SimpleMapTestProps) {
     setMapLoaded(true)
   }
 
-  const handleMapError = (error: Error) => {
+  const handleMapError = (error: unknown) => {
     console.error("기본 지도 로드 실패:", error)
-    setMapError(error.message)
+    if (error instanceof Error) {
+      setMapError(error.message)
+    } else {
+      setMapError("알 수 없는 오류가 발생했습니다.")
+    }
   }
 
   return (
@@ -34,13 +38,13 @@ export default function SimpleMapTest({ apiKey }: SimpleMapTestProps) {
       </div>
 
       <div className="h-64 w-full border border-gray-300">
-        <APIProvider apiKey={apiKey}>
+        <APIProvider apiKey={apiKey} onError={handleMapError}>
           <Map
             mapId="simple-test-map"
             defaultCenter={{ lat: 37.5665, lng: 126.978 }}
             defaultZoom={12}
-            onLoad={handleMapLoad}
-            onError={handleMapError}
+            onIdle={handleMapLoad} // Changed from onLoad
+            // onError prop removed from Map, moved to APIProvider
             className="w-full h-full"
           />
         </APIProvider>

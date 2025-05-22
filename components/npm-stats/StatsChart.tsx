@@ -46,7 +46,7 @@ export default function StatsChart({ packages }: StatsChartProps) {
     if (value >= 1000000) {
       return `${(value / 1000000).toFixed(0)}M`
     }
-    return value
+    return value.toString()
   }
 
   // 툴팁 값 포맷팅

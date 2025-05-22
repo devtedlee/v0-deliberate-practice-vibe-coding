@@ -57,44 +57,30 @@ export default function UnitConverter() {
             <TabsTrigger value="temperature">온도</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="length" className="space-y-6">
-            <InputSection
-              unitType="length"
-              inputValue={inputValue}
-              fromUnit={fromUnit}
-              toUnit={toUnit}
-              onInputChange={setInputValue}
-              onFromUnitChange={setFromUnit}
-              onToUnitChange={setToUnit}
-            />
-            <ResultSection result={result} fromUnit={fromUnit} toUnit={toUnit} unitType="length" />
-          </TabsContent>
-
-          <TabsContent value="weight" className="space-y-6">
-            <InputSection
-              unitType="weight"
-              inputValue={inputValue}
-              fromUnit={fromUnit}
-              toUnit={toUnit}
-              onInputChange={setInputValue}
-              onFromUnitChange={setFromUnit}
-              onToUnitChange={setToUnit}
-            />
-            <ResultSection result={result} fromUnit={fromUnit} toUnit={toUnit} unitType="weight" />
-          </TabsContent>
-
-          <TabsContent value="temperature" className="space-y-6">
-            <InputSection
-              unitType="temperature"
-              inputValue={inputValue}
-              fromUnit={fromUnit}
-              toUnit={toUnit}
-              onInputChange={setInputValue}
-              onFromUnitChange={setFromUnit}
-              onToUnitChange={setToUnit}
-            />
-            <ResultSection result={result} fromUnit={fromUnit} toUnit={toUnit} unitType="temperature" />
-          </TabsContent>
+          {/* Single dynamic TabsContent */}
+          {["length", "weight", "temperature"].map((currentTabUnitType) => (
+            <TabsContent key={currentTabUnitType} value={currentTabUnitType} className="space-y-6">
+              {unitType === currentTabUnitType && ( // Only render if the tab is active
+                <>
+                  <InputSection
+                    unitType={unitType} // Pass the active unitType
+                    inputValue={inputValue}
+                    fromUnit={fromUnit}
+                    toUnit={toUnit}
+                    onInputChange={setInputValue}
+                    onFromUnitChange={setFromUnit}
+                    onToUnitChange={setToUnit}
+                  />
+                  <ResultSection 
+                    result={result} 
+                    fromUnit={fromUnit} 
+                    toUnit={toUnit} 
+                    unitType={unitType} // Pass the active unitType
+                  />
+                </>
+              )}
+            </TabsContent>
+          ))}
         </Tabs>
       </CardContent>
     </Card>

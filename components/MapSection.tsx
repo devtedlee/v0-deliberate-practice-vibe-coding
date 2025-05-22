@@ -53,7 +53,7 @@ export default function MapSection({ restaurants, selectedRestaurant, setSelecte
     }
 
     setLocalMapError(errorMessage)
-    setMapError(errorMessage)
+    setMapError(new Error(errorMessage))
   }
 
   // 마커 클릭 시 해당 맛집 선택
@@ -101,8 +101,7 @@ export default function MapSection({ restaurants, selectedRestaurant, setSelecte
         defaultZoom={mapZoom}
         center={mapCenter}
         zoom={mapZoom}
-        onLoad={handleMapLoad}
-        onError={handleMapError}
+        onIdle={handleMapLoad}
         gestureHandling="greedy"
         disableDefaultUI={false}
         mapTypeControl={false}
@@ -161,10 +160,10 @@ function MapErrorUI({ errorMessage }: { errorMessage: string }) {
               에 로그인하세요.
             </li>
             <li>프로젝트를 선택하거나 새 프로젝트를 만드세요.</li>
-            <li>왼쪽 메뉴에서 "API 및 서비스" &gt; "라이브러리"를 선택하세요.</li>
-            <li>"Maps JavaScript API"를 검색하고 선택하세요.</li>
-            <li>"사용 설정" 버튼을 클릭하여 API를 활성화하세요.</li>
-            <li>API 키가 제한되어 있다면, "사용자 인증 정보" 페이지에서 제한 사항을 확인하세요.</li>
+            <li>왼쪽 메뉴에서 &quot;API 및 서비스&quot; &gt; &quot;라이브러리&quot;를 선택하세요.</li>
+            <li>&quot;Maps JavaScript API&quot;를 검색하고 선택하세요.</li>
+            <li>&quot;사용 설정&quot; 버튼을 클릭하여 API를 활성화하세요.</li>
+            <li>API 키가 제한되어 있다면, &quot;사용자 인증 정보&quot; 페이지에서 제한 사항을 확인하세요.</li>
           </ol>
         </div>
 

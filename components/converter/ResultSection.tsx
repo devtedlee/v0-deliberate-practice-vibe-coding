@@ -24,7 +24,7 @@ function ResultSection({ result, fromUnit, toUnit, unitType }: ResultSectionProp
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
       <h3 className="text-lg font-medium text-gray-700 mb-2">변환 결과</h3>
-      <div className="text-3xl font-bold text-gray-900">
+      <div className="text-3xl font-bold text-gray-900" data-testid="conversion-result">
         {formattedResult} <span className="text-gray-600">{getUnitSymbol(toUnit)}</span>
       </div>
     </div>

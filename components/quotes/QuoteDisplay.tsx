@@ -14,9 +14,9 @@ export default function QuoteDisplay({ quote }: QuoteDisplayProps) {
       >
         {quote.type === "quote" ? (
           <p className="relative">
-            <span className="absolute -left-4">"</span>
+            <span className="absolute -left-4">&quot;</span>
             {quote.content}
-            <span className="absolute -right-4">"</span>
+            <span className="absolute -right-4">&quot;</span>
           </p>
         ) : (
           <p>{quote.content}</p>

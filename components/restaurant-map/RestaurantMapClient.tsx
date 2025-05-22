@@ -7,6 +7,9 @@ import RestaurantList from "./RestaurantList"
 import CategoryFilterSimple from "./CategoryFilterSimple"
 import MapSection from "./MapSection"
 import SimpleMapTest from "./SimpleMapTest"
+import DebugInfoDisplay from "./DebugInfoDisplay"
+import ModeToggleButtons from "./ModeToggleButtons"
+import V0PreviewWarning from "./V0PreviewWarning"
 
 interface RestaurantMapClientProps {
   restaurants: Restaurant[]
@@ -234,156 +237,31 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
   // 패턴 제안 - 클라이언트 사이드에서만 실행
   const { exactPattern, wildcardPattern } = suggestedPatterns
 
-  // v0 preview 환경 경고 메시지
-  const V0PreviewWarning = () => (
-    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-      <div className="flex">
-        <div className="flex-shrink-0">
-          <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </div>
-        <div className="ml-3">
-          <p className="text-sm text-yellow-700">
-            <strong>v0 preview 환경 감지됨:</strong> 이 환경에서는 Google Maps API 키 제한으로 인해 지도가 표시되지
-            않습니다.
-          </p>
-          <div className="mt-2 p-2 bg-yellow-100 rounded text-xs font-mono overflow-auto">
-            <p className="text-yellow-800">
-              <strong>현재 전체 URL:</strong>
-            </p>
-            <p className="text-yellow-800 break-all">{currentUrl}</p>
-          </div>
-          <div className="mt-3">
-            <p className="text-sm text-yellow-700">
-              <strong>API 키 제한 설정에 추가할 패턴:</strong>
-            </p>
-            <div className="mt-1 space-y-1">
-              <div className="flex items-center">
-                <code className="bg-yellow-100 px-2 py-1 rounded text-xs">{exactPattern}</code>
-                <button
-                  onClick={() => {
-                    if (typeof navigator !== "undefined" && navigator.clipboard) {
-                      navigator.clipboard.writeText(exactPattern)
-                      alert("패턴이 클립보드에 복사되었습니다!")
-                    }
-                  }}
-                  className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                >
-                  복사
-                </button>
-              </div>
-              <p className="text-xs text-yellow-700">또는 더 넓은 범위의 와일드카드 패턴:</p>
-              <div className="flex items-center">
-                <code className="bg-yellow-100 px-2 py-1 rounded text-xs">{wildcardPattern}</code>
-                <button
-                  onClick={() => {
-                    if (typeof navigator !== "undefined" && navigator.clipboard) {
-                      navigator.clipboard.writeText(wildcardPattern)
-                      alert("패턴이 클립보드에 복사되었습니다!")
-                    }
-                  }}
-                  className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                >
-                  복사
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
   return (
     <div className="w-full h-full flex flex-col">
-      {/* 컨트롤 버튼 그룹 */}
-      <div className="absolute top-4 right-4 z-20 flex space-x-2">
-        <button
-          onClick={toggleMapMode}
-          className={`px-3 py-1 rounded-md text-xs font-medium ${
-            isPreviewMode ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          {isPreviewMode ? "지도 모드로 전환" : "목록 모드로 전환"}
-        </button>
-        {!isPreviewMode && (
-          <button
-            onClick={toggleViewMode}
-            className={`px-3 py-1 rounded-md text-xs font-medium ${
-              showMapList ? "bg-purple-500 text-white" : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            {showMapList ? "지도만 보기" : "지도+목록 보기"}
-          </button>
-        )}
-        {/* 개발 환경이나 v0 프리뷰에서만 디버그 버튼 표시 */}
-        {isDevelopmentOrPreview && (
-          <button
-            onClick={toggleDebugMode}
-            className={`px-3 py-1 rounded-md text-xs font-medium ${
-              isDebugMode ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            {isDebugMode ? "디버그 끄기" : "디버그 켜기"}
-          </button>
-        )}
-      </div>
+      <ModeToggleButtons
+        isPreviewMode={isPreviewMode}
+        toggleMapMode={toggleMapMode}
+        showMapList={showMapList}
+        toggleViewMode={toggleViewMode}
+        isDevelopmentOrPreview={isDevelopmentOrPreview}
+        isDebugMode={isDebugMode}
+        toggleDebugMode={toggleDebugMode}
+        isV0Preview={isV0Preview}
+      />
 
-      {/* 디버그 정보 표시 (개발 환경이나 v0 프리뷰 & 디버그 모드에서만) */}
       {isDevelopmentOrPreview && isDebugMode && (
-        <div className="absolute top-12 right-4 z-20 bg-white p-3 rounded-md shadow-md text-xs w-64">
-          <h4 className="font-bold mb-2">디버그 정보</h4>
-          <div className="space-y-1">
-            <p>
-              <span className="font-medium">API 키:</span>{" "}
-              {apiKey ? `설정됨 (길이: ${apiKey.length})` : "설정되지 않음"}
-            </p>
-            <p>
-              <span className="font-medium">API 키 값:</span>{" "}
-              <span className="font-mono text-xs break-all">{apiKey ? `${apiKey.substring(0, 8)}...` : "없음"}</span>
-            </p>
-            <p>
-              <span className="font-medium">현재 모드:</span> {isPreviewMode ? "목록 모드" : "지도 모드"}
-            </p>
-            <p>
-              <span className="font-medium">환경:</span> {isV0Preview ? "v0 preview" : "일반 환경"}
-            </p>
-            <div className="mt-1 p-1 bg-gray-100 rounded">
-              <p className="font-medium">현재 URL:</p>
-              <p className="font-mono text-xs break-all">{currentUrl}</p>
-            </div>
-            <p>
-              <span className="font-medium">지도 중심점:</span>{" "}
-              {`${mapCenter.lat.toFixed(4)}, ${mapCenter.lng.toFixed(4)}`}
-            </p>
-            <p>
-              <span className="font-medium">지도 줌 레벨:</span> {mapZoom}
-            </p>
-            <p>
-              <span className="font-medium">사용자 지도 조작:</span>{" "}
-              <span className={isUserControllingMap ? "text-green-600 font-bold" : "text-gray-600"}>
-                {isUserControllingMap ? "활성" : "비활성"}
-              </span>
-            </p>
-            <p>
-              <span className="font-medium">컨테이너 크기:</span>{" "}
-              {mapContainerRef.current
-                ? `${mapContainerRef.current.offsetWidth}x${mapContainerRef.current.offsetHeight}`
-                : "알 수 없음"}
-            </p>
-            {mapError && (
-              <div className="mt-2 p-2 bg-red-50 text-red-700 rounded-md">
-                <p className="font-medium">오류 발생:</p>
-                <p>{mapError}</p>
-              </div>
-            )}
-          </div>
-        </div>
+        <DebugInfoDisplay
+          apiKey={apiKey}
+          isPreviewMode={isPreviewMode}
+          isV0Preview={isV0Preview}
+          currentUrl={currentUrl}
+          mapCenter={mapCenter}
+          mapZoom={mapZoom}
+          isUserControllingMap={isUserControllingMap}
+          mapContainerRef={mapContainerRef}
+          mapError={mapError}
+        />
       )}
 
       {/* 개발 환경이나 v0 프리뷰 & 디버그 모드일 때만 SimpleMapTest 표시 */}
@@ -395,7 +273,11 @@ export default function RestaurantMapClient({ restaurants, apiKey }: RestaurantM
 
       {isV0Preview && (
         <div className="p-4">
-          <V0PreviewWarning />
+          <V0PreviewWarning
+            currentUrl={currentUrl}
+            exactPattern={exactPattern}
+            wildcardPattern={wildcardPattern}
+          />
         </div>
       )}
 

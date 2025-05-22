@@ -24,9 +24,9 @@ const RestaurantListItemCard = forwardRef<HTMLDivElement, RestaurantListItemCard
           <h3 className="text-base font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
             {restaurant.name}
           </h3>
-          {restaurant.url && (
+          {restaurant.link && (
             <a
-              href={restaurant.url}
+              href={restaurant.link}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:text-blue-700 transition-colors"
@@ -38,12 +38,12 @@ const RestaurantListItemCard = forwardRef<HTMLDivElement, RestaurantListItemCard
         </div>
         <p className="text-xs text-gray-500 mt-0.5">{restaurant.address}</p>
         <div className="mt-2 pt-2 border-t border-gray-100">
-          <p className="text-xs text-gray-600">
+          {/* <p className="text-xs text-gray-600">
             <span className="font-medium">대표 메뉴:</span> {restaurant.representativeMenu}
           </p>
           <p className="text-xs text-gray-600">
             <span className="font-medium">추천 이유:</span> {restaurant.recommendationReason}
-          </p>
+          </p> */}
         </div>
       </div>
     );

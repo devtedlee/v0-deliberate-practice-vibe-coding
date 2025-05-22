@@ -6,7 +6,7 @@ import RestaurantMarker from "./RestaurantMarker"
 import RestaurantInfoWindow from "./RestaurantInfoWindow"
 import CurrentLocationButton from "./CurrentLocationButton"
 import type { Restaurant } from "@/types/restaurant"
-import type { google } from "googlemaps"
+// import type { google } from "googlemaps"; // Removed as @types/google.maps should provide global types
 
 interface MapSectionProps {
   restaurants: Restaurant[]
@@ -253,8 +253,8 @@ function MapSection({
         mapId="restaurant-map"
         defaultCenter={mapCenter}
         defaultZoom={mapZoom}
-        onLoad={handleMapLoad}
-        onError={handleMapError}
+        onIdle={handleMapLoad} // Changed from onLoad
+        // onError={handleMapError} // Removed, typically handled by APIProvider
         gestureHandling="greedy"
         disableDefaultUI={false}
         mapTypeControl={false}
