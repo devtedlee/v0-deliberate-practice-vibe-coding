@@ -59,6 +59,13 @@ export default function Home() {
       path: "/color-palette",
       icon: "🎨",
     },
+    {
+      id: 9,
+      title: "나만의 북마크 컬렉션",
+      description: "주제별로 유용한 링크를 모아보고 관리할 수 있는 북마크 컬렉션입니다.",
+      path: "/bookmarks",
+      icon: "🔖",
+    },
   ]
 
   return (
