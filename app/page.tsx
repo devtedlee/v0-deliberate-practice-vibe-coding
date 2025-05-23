@@ -66,6 +66,13 @@ export default function Home() {
       path: "/bookmarks",
       icon: "🔖",
     },
+    {
+      id: 10,
+      title: "JSON 포매터/뷰어",
+      description: "JSON 데이터를 포매팅하고 트리 구조로 시각화하여 쉽게 탐색할 수 있습니다.",
+      path: "/json-formatter",
+      icon: "🧩",
+    },
   ]
 
   return (
