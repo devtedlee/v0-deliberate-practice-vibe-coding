@@ -73,6 +73,13 @@ export default function Home() {
       path: "/json-formatter",
       icon: "🧩",
     },
+    {
+      id: 11,
+      title: "글자 수/단어 수 카운터",
+      description: "텍스트의 글자 수, 단어 수, 문장 수, 문단 수를 실시간으로 분석하고 카운트합니다.",
+      path: "/text-counter",
+      icon: "🔢",
+    },
   ]
 
   return (
