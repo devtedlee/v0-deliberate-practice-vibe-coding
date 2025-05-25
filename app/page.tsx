@@ -80,6 +80,13 @@ export default function Home() {
       path: "/text-counter",
       icon: "🔢",
     },
+    {
+      id: 12,
+      title: "온라인 설문조사/투표",
+      description: "다양한 주제에 대해 투표하고 실시간 결과를 확인할 수 있는 설문조사 플랫폼입니다.",
+      path: "/poll",
+      icon: "🗳️",
+    },
   ]
 
   return (
