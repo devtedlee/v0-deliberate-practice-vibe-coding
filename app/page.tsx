@@ -87,6 +87,14 @@ export default function Home() {
       path: "/poll",
       icon: "🗳️",
     },
+    {
+      id: 13,
+      title: "이미지 압축/리사이즈 도구",
+      description:
+        "무료 온라인 이미지 압축 도구로 JPEG, PNG, WebP 포맷을 지원하며 클라이언트 측에서 안전하게 처리됩니다.",
+      path: "/image-compressor",
+      icon: "🖼️",
+    },
   ]
 
   return (
