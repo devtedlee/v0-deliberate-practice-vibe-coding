@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import SeoHead from "@/components/layout/SeoHead"
+import { mainListPageSeo } from "@/data/seoData"
 
 export default function Home() {
   const pages = [
@@ -95,38 +97,89 @@ export default function Home() {
       path: "/image-compressor",
       icon: "🖼️",
     },
+    {
+      id: 14,
+      title: "QR 코드 생성기",
+      description:
+        "URL, 텍스트, 연락처 등 원하는 정보를 QR 코드로 변환하세요. 다양한 커스터마이징 옵션으로 나만의 QR 코드를 만들 수 있습니다.",
+      path: "/qr-generator",
+      icon: "📱",
+    },
   ]
 
-  return (
-    <div className="min-h-screen bg-white">
-      <main className="container mx-auto px-4 py-16 max-w-5xl">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-4">웹사이트 목록</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">다양한 페이지를 탐색해보세요.</p>
-        </div>
+  // 구조화된 데이터 (JSON-LD)
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: mainListPageSeo.ogTitle,
+    description: mainListPageSeo.description,
+    url: "https://your-domain.com",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://your-domain.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: pages.length,
+      itemListElement: pages.map((page, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "WebApplication",
+          name: page.title,
+          description: page.description,
+          url: `https://your-domain.com${page.path}`,
+          applicationCategory: "UtilityApplication",
+        },
+      })),
+    },
+  }
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {pages.map((page) => (
-            <Link
-              key={page.id}
-              href={page.path}
-              className="group block p-6 border border-gray-100 rounded-lg hover:border-gray-300 transition-all"
-            >
-              <div className="flex items-start space-x-4">
-                <div className="text-4xl">{page.icon}</div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-700">{page.title}</h2>
-                  <p className="text-gray-600 mb-4">{page.description}</p>
-                  <div className="flex items-center text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                    <span>페이지 방문하기</span>
-                    <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+  return (
+    <>
+      <SeoHead
+        title={mainListPageSeo.title}
+        description={mainListPageSeo.description}
+        keywords={mainListPageSeo.keywords}
+        ogTitle={mainListPageSeo.ogTitle}
+        ogDescription={mainListPageSeo.ogDescription}
+        ogImage={mainListPageSeo.ogImage}
+        ogUrl={mainListPageSeo.canonicalUrl}
+        canonicalUrl={mainListPageSeo.canonicalUrl}
+        structuredData={structuredData}
+      />
+
+      <div className="min-h-screen bg-white">
+        <main className="container mx-auto px-4 py-16 max-w-5xl">
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-4">웹사이트 목록</h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">다양한 페이지를 탐색해보세요.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {pages.map((page) => (
+              <Link
+                key={page.id}
+                href={page.path}
+                className="group block p-6 border border-gray-100 rounded-lg hover:border-gray-300 transition-all"
+              >
+                <div className="flex items-start space-x-4">
+                  <div className="text-4xl">{page.icon}</div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-700">{page.title}</h2>
+                    <p className="text-gray-600 mb-4">{page.description}</p>
+                    <div className="flex items-center text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                      <span>페이지 방문하기</span>
+                      <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </main>
-    </div>
+              </Link>
+            ))}
+          </div>
+        </main>
+      </div>
+    </>
   )
 }
