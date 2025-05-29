@@ -116,6 +116,14 @@ export default function Home() {
       path: "/markdown-editor",
       icon: "📝",
     },
+    {
+      id: 16,
+      title: "비밀번호 생성기",
+      description:
+        "강력하고 안전한 비밀번호를 손쉽게 생성하고 복사할 수 있습니다. 다양한 옵션으로 맞춤 설정이 가능합니다.",
+      path: "/password-generator",
+      icon: "🔑",
+    },
   ]
 
   return (
